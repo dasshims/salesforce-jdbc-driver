@@ -8,6 +8,7 @@ import com.sforce.soap.partner.PartnerConnection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.wisecoders.dbschema.salesforce.JdbcDriver.LOGGER;
 
@@ -40,6 +41,7 @@ public class Schema {
             }
             tables.clear();
             tables.addAll( _tables );
+            LOGGER.info("Load schema tables done...");
         } catch (Throwable ex) {
             throw new SQLException(ex);
         }
@@ -66,6 +68,43 @@ public class Schema {
                     }
                 }
             }
+            LOGGER.info("Load schema columns done..." );
+        } catch ( Throwable ex ){
+            throw new SQLException( ex );
+        }
+    }
+
+    public void refreshColumns( PartnerConnection connection, String tableName ) throws SQLException {
+        LOGGER.info("refreshColumns for particular table..." );
+        try {
+           /* List<Table> tablesInQuery = tables.stream()
+                    .filter(tableNameFromCache -> tableNameFromCache.findNamePattern.matcher(query).find())
+                    .collect(Collectors.toList());*/
+
+             List<Table> tablesInQuery = tables.stream()
+                    .filter(tableNameFromCache -> tableNameFromCache.name.equalsIgnoreCase(tableName))
+                    .collect(Collectors.toList());
+
+
+            for (Table table : tablesInQuery ) {
+                DescribeSObjectResult result = connection.describeSObject(table.getName());
+                if (table.columns.size() == result.getFields().length) // meaning all columns are already loaded
+                    return;
+                for (Field field : result.getFields()) {
+                    Column column = table.createColumn(field.getName(), getType(field),
+                            field.getLength(), field.getDigits(), field.getScale(), field.isNillable(), field.isAutoNumber(), field.getLabel());
+                    column.setCalculated(field.isCalculated() || field.isAutoNumber());
+                    String[] referenceTos = field.getReferenceTo();
+                    if (referenceTos != null) {
+                        for (String referenceTo : referenceTos) {
+                            Table pkTable = getTable(referenceTo);
+                            if (pkTable != null) {
+                                table.createForeignKey(column, pkTable);
+                            }
+                        }
+                    }
+            }
+            }
         } catch ( Throwable ex ){
             throw new SQLException( ex );
         }
@@ -84,6 +123,12 @@ public class Schema {
         }
         refreshColumns( partnerConnection );
     }
+
+    public void ensureColumnsAreLoaded(PartnerConnection partnerConnection, String tableNamePattern ) throws SQLException {
+        ensureTablesAreLoaded( partnerConnection);
+        refreshColumns(partnerConnection, tableNamePattern);
+    }
+
 
     private static String getType(Field field) {
         String s = field.getType().toString();

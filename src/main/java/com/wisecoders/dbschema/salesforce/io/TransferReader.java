@@ -52,7 +52,7 @@ public class TransferReader {
 
     public void transferData( Table table ) throws SQLException {
         TransferWriter writer = new TransferWriter( table, salesforceConnection);
-        salesforceConnection.ensureColumnsAreLoaded();
+        salesforceConnection.ensureColumnsAreLoaded(table.name);
         LOGGER.info("Transfer '"  + table + "' data..." );
         Thread.dumpStack();
         writer.createTable();
@@ -126,6 +126,4 @@ public class TransferReader {
     private boolean isDataObjectType(XmlObject object) {
         return !SOAP_RESPONSE_SERVICE_OBJECT_TYPES.contains(object.getName().getLocalPart());
     }
-
-
 }

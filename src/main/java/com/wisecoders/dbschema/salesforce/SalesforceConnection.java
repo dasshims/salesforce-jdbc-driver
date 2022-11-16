@@ -11,11 +11,14 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 /**
@@ -33,6 +36,7 @@ import java.util.regex.Pattern;
 
 public class SalesforceConnection implements Connection {
 
+    public static final Logger LOGGER = Logger.getLogger( SalesforceConnection.class.getName() );
     private static final Pattern CLEAN_CACHES = Pattern.compile( "(\\s*)clean(\\s+)caches(\\s+)", Pattern.CASE_INSENSITIVE );
     private static final Pattern CACHE_ALL = Pattern.compile( "(\\s*)cache(\\s+)all(\\s+)", Pattern.CASE_INSENSITIVE );
     private static final Pattern RELOAD_SCHEMA = Pattern.compile( "(\\s*)reload(\\s+)schema(\\s+)", Pattern.CASE_INSENSITIVE );
@@ -75,10 +79,18 @@ public class SalesforceConnection implements Connection {
         getSchemaDef().ensureColumnsAreLoaded( partnerConnection );
     }
 
+    public void ensureColumnsAreLoaded(String tableNamePattern) throws SQLException {
+        getSchemaDef().ensureColumnsAreLoaded(partnerConnection, tableNamePattern);
+    }
+
     private void transferDataForTablesFromQuery( String query ) throws SQLException{
         if ( query != null && !query.isEmpty()){
             ensureTablesAreLoaded();
-            for ( Table table : getSchemaDef().tables ){
+
+            Collection<Table> tablesToLoad = getSchemaDef().tables
+                    .stream().filter(table -> table.findNamePattern.matcher(query).find())
+                    .collect(Collectors.toList());
+            for ( Table table : tablesToLoad ){
                 if (!table.isLoaded() && table.findNamePattern.matcher(query).find() ){
                     reader.transferData( table );
                     table.setLoaded( true );

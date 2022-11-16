@@ -58,7 +58,7 @@ public class SalesforceMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getColumns(String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern) throws SQLException {
-        connection.ensureColumnsAreLoaded();
+        connection.ensureColumnsAreLoaded(tableNamePattern);
         final ArrayResultSet result = new ArrayResultSet();
         result.setColumnNames(new String[] { "TABLE_CAT", "TABLE_SCHEM", "TABLE_NAME", "COLUMN_NAME",
                 "DATA_TYPE", "TYPE_NAME", "COLUMN_SIZE", "BUFFER_LENGTH", "DECIMAL_DIGITS", "NUM_PREC_RADIX",
@@ -67,6 +67,10 @@ public class SalesforceMetaData implements DatabaseMetaData {
                 "SOURCE_DATA_TYPE", "IS_AUTOINCREMENT" });
         for ( Table table : connection.getSchemaDef().tables ){
             if ( tableNamePattern == null || table.name.contains(tableNamePattern)){
+                if(table.columns.isEmpty() || table.columns.size() ==0 ) {
+                    connection.ensureColumnsAreLoaded(table.name);
+                }
+
                 for ( Column column : table.columns ){
                     if ( columnNamePattern == null|| column.name.contains( columnNamePattern )) {
                         result.addRow( new String[]{
