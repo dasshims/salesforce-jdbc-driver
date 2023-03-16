@@ -1,3 +1,13 @@
+# Salesforce JDBC Used in Trino salesforce connector
+Forked from - https://github.com/wise-coders/salesforce-jdbc-driver.git
+
+# How to build 
+```
+./gradlew build
+```
+It runs the tests which require an active salesforce connection details in gradle.properties file. Update those before you run the tests. 
+You can also skip the tests by appending `-x test`  flag.
+
 # Salesforce JDBC Driver | DbSchema Salesforce Designer
 Full compatible JDBC driver provided by [DbSchema Salesforce Designer](https://dbschema.com/database-designer/Salesforce.html).
 
