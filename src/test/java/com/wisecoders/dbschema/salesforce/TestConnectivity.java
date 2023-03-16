@@ -42,7 +42,7 @@ public class TestConnectivity {
         prop.load(input);
         // IN gradle.properties EDIT salesforceURL=jdbc:dbschema:salesforce://user=...&password=...+token
         final String URL = prop.getProperty("salesforceURL");
-        connection = DriverManager.getConnection( URL );
+        connection = DriverManager.getConnection(URL);
     }
 
     @Test
@@ -57,7 +57,9 @@ public class TestConnectivity {
                 System.out.println();
             }
         }
-        //st.execute("save dbf to out/testExport");
+        // Debug cached tables
+        st.execute("select * from User");
+        System.out.println(st.getResultSet().toString());
     }
 
 }

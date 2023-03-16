@@ -85,7 +85,7 @@ public class SalesforceConnection implements Connection {
 
     private void transferDataForTablesFromQuery( String query ) throws SQLException{
         if ( query != null && !query.isEmpty()){
-            ensureTablesAreLoaded();
+            ensureTablesAreLoaded(); // this is only for loading the table names. Not the entire schema..
 
             Collection<Table> tablesToLoad = getSchemaDef().tables
                     .stream().filter(table -> table.findNamePattern.matcher(query).find())

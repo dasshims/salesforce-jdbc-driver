@@ -63,7 +63,8 @@ public class TransferReader {
                 QueryResult queryResult = null;
                 int rows = 0;
                 do {
-                    queryResult = queryResult == null ? salesforceConnection.partnerConnection.query(sql) : salesforceConnection.partnerConnection.queryMore(queryResult.getQueryLocator());
+                    queryResult = queryResult == null ? salesforceConnection.partnerConnection.query(sql)
+                            : salesforceConnection.partnerConnection.queryMore(queryResult.getQueryLocator());
                     SObject[] records = queryResult.getRecords();
                     for (SObject row : records) {
                         List<ForceResultField> clearRow = removeServiceInfo( row );
